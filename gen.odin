@@ -46,19 +46,19 @@ main :: proc() {
 	}
 
 	prob_path, jperr := os2.join_path({exec_dir, problem}, context.temp_allocator)
-    ensure(jperr == nil)
+	ensure(jperr == nil)
 
 	sol_fname := fmt.tprintf("sol.%s", opt.e)
 	sol_fpath, jpserr := os2.join_path({prob_path, sol_fname}, context.temp_allocator)
-    ensure(jpserr == nil)
+	ensure(jpserr == nil)
 
 	derr := os2.mkdir(prob_path)
 	if derr != nil {
-        if derr == .Exist {
-            fmt.eprintfln("ERROR: Path '%s' already exists.", prob_path)
-        } else {
-		    fmt.printfln("ERROR: couldn't create directory '%s': %v", prob_path, derr)
-        }
+		if derr == .Exist {
+			fmt.eprintfln("ERROR: Path '%s' already exists.", prob_path)
+		} else {
+			fmt.printfln("ERROR: couldn't create directory '%s': %v", prob_path, derr)
+		}
 		os2.exit(1)
 	}
 	fmt.printfln("[INFO] Created directory '%s'", prob_path)
