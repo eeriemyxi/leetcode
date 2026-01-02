@@ -17,7 +17,7 @@ opt: Options
 find_link :: proc(text: string) -> (result: string, ok: bool) {
 	pattern :: `https?:\/\/leetcode.com\/problems\/([a-z,A-Z,\-]+)\/?`
 	iter, err := regex.create_iterator(text, pattern)
-    ensure(err == nil, "Bad regex.")
+	ensure(err == nil, "Bad regex.")
 	for match in regex.match_iterator(&iter) {
 		return match.groups[1], true
 	}
