@@ -46,11 +46,11 @@ main :: proc() {
 	}
 
 	prob_path, jperr := os2.join_path({exec_dir, problem}, context.temp_allocator)
-	ensure(jperr == nil)
+	ensure(jperr == nil, "Couldn't join paths.")
 
 	sol_fname := fmt.tprintf("sol.%s", opt.e)
 	sol_fpath, jpserr := os2.join_path({prob_path, sol_fname}, context.temp_allocator)
-	ensure(jpserr == nil)
+	ensure(jpserr == nil, "Couldn't join paths.")
 
 	derr := os2.mkdir(prob_path)
 	if derr != nil {
@@ -69,4 +69,21 @@ main :: proc() {
 		os2.exit(1)
 	}
 	fmt.printfln("[INFO] Created file '%s'", sol_fpath)
+    
+    prob_readme_path, jprerr := os2.join_path({prob_path, "README.md"}, context.temp_allocator)
+    ensure(jprerr == nil, "Couldn't join paths.")
+    
+    rfile, rferr := os2.open(prob_readme_path, {.Write} | {.Create}, os2.Permissions_Default_File)
+	if rferr != nil {
+		fmt.printfln("ERROR: couldn't open file '%s': %v", prob_readme_path, rferr)
+		os2.exit(1)
+	}
+	defer os2.close(rfile)
+
+    n, rwerr := os2.write_string(rfile, fmt.tprintf("Problem: %s\n", opt.p))
+	if rwerr != nil {
+		fmt.printfln("ERROR: couldn't write to file '%s': %v", prob_readme_path, rwerr)
+		os2.exit(1)
+	}
+	fmt.printfln("[INFO] Wrote %d bytes to file '%s'", n, prob_readme_path)
 }
