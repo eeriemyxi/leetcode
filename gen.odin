@@ -10,6 +10,7 @@ import "core:text/regex"
 Options :: struct {
 	p: string `args:"pos=0" usage:"Name of the problem. Or link."`,
 	e: string `usage:"Extension of the solution file. Defaults to 'cpp'."`,
+	i: bool `usage:"Read stdin and include that into the solution source file."`,
 }
 
 opt: Options
@@ -22,6 +23,23 @@ find_link :: proc(text: string) -> (result: string, ok: bool) {
 		return match.groups[1], true
 	}
 	return "", false
+}
+
+write_to :: proc(path: string, text: string) {
+	file, ferr := os2.open(path, {.Write} | {.Create}, os2.Permissions_Default_File)
+	if ferr != nil {
+		fmt.printfln("ERROR: couldn't open file '%s': %v", path, ferr)
+		os2.exit(1)
+	}
+	defer os2.close(file)
+	fmt.printfln("[INFO] Created file '%s'", path)
+
+	n, werr := os2.write_string(file, text)
+	if werr != nil {
+		fmt.printfln("ERROR: couldn't write to file '%s': %v", path, werr)
+		os2.exit(1)
+	}
+	fmt.printfln("[INFO] Wrote %d bytes to file '%s'", n, path)
 }
 
 main :: proc() {
@@ -63,27 +81,13 @@ main :: proc() {
 	}
 	fmt.printfln("[INFO] Created directory '%s'", prob_path)
 
-	file, ferr := os2.create(sol_fpath)
-	if ferr != nil {
-		fmt.printfln("ERROR: couldn't create file '%s': %v", sol_fname, ferr)
-		os2.exit(1)
-	}
-	fmt.printfln("[INFO] Created file '%s'", sol_fpath)
-    
-    prob_readme_path, jprerr := os2.join_path({prob_path, "README.md"}, context.temp_allocator)
-    ensure(jprerr == nil, "Couldn't join paths.")
-    
-    rfile, rferr := os2.open(prob_readme_path, {.Write} | {.Create}, os2.Permissions_Default_File)
-	if rferr != nil {
-		fmt.printfln("ERROR: couldn't open file '%s': %v", prob_readme_path, rferr)
-		os2.exit(1)
-	}
-	defer os2.close(rfile)
+	prob_readme_path, jprerr := os2.join_path({prob_path, "README.md"}, context.temp_allocator)
+	ensure(jprerr == nil, "Couldn't join paths.")
 
-    n, rwerr := os2.write_string(rfile, fmt.tprintf("Problem: %s\n", opt.p))
-	if rwerr != nil {
-		fmt.printfln("ERROR: couldn't write to file '%s': %v", prob_readme_path, rwerr)
-		os2.exit(1)
+	write_to(prob_readme_path, fmt.tprintf("Problem: %s\n", opt.p))
+
+	if (opt.i) {
+		idata, irerr := os2.read_entire_file(os2.stdin, context.temp_allocator)
+		write_to(sol_fpath, string(idata))
 	}
-	fmt.printfln("[INFO] Wrote %d bytes to file '%s'", n, prob_readme_path)
 }
